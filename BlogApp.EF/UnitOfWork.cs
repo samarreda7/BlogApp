@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace BlogApp.EF
 {
     public class UnitOfWork : IUnitOfWork
-
     {
+
     }
 }
