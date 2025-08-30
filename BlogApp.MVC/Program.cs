@@ -1,5 +1,7 @@
-﻿using BlogApp.Core.Models;
+﻿using BlogApp.Core.Iservices;
+using BlogApp.Core.Models;
 using BlogApp.EF;
+using BlogApp.Service.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +22,7 @@ namespace BlogApp.MVC
             builder.Services.AddIdentity<User, IdentityRole>()
                    .AddEntityFrameworkStores<AppDbContext>();
 
+            builder.Services.AddScoped<IAuthService, AuthService>(); 
 
             var app = builder.Build();
             

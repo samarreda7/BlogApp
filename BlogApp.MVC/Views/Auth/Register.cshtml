@@ -1,0 +1,57 @@
+﻿@model BlogApp.Core.DTOs.RegisterModel
+
+@{
+    ViewData["Title"] = "Register";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="row justify-content-center">
+
+    <div class="col-md-6 col-lg-4">
+
+        <div class="card shadow">
+
+            <div class="card-body">
+
+                <h4 class="card-title text-center mb-4">Create a New Account</h4> 
+                <form asp-action="Register" method="post">
+                    @* <hr /> *@ 
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div> 
+
+                    <div class="mb-3">
+                        
+                        <label asp-for="username" class="form-label"></label>
+                        <input asp-for="username" class="form-control" autocomplete="username" aria-required="true" placeholder="Choose a username" />
+                        <span asp-validation-for="username" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="password" class="form-label"></label>
+                        <input asp-for="password" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Create a password" />
+                        <span asp-validation-for="password" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ConfirmPassword" class="form-label"></label>
+                        <input asp-for="ConfirmPassword" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Confirm your password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        
+                        <button type="submit" class="btn btn-primary btn-lg">Register</button> 
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="text-center mt-3">
+            
+            <p>Already have an account? <a asp-action="Login" asp-controller="Auth">Log in here</a></p> 
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
