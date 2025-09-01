@@ -54,27 +54,27 @@ namespace BlogApp.MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginDTO loginVM)
+        public async Task<IActionResult> Login(LoginDTO model)
         {
             if (!ModelState.IsValid)
             {
-                return View(loginVM);
+                return View(model);
             }
 
-            var result = await _userService.LoginAsync(loginVM.username, loginVM.password);
+            var result = await _userService.LoginAsync(model.username, model.password);
 
             if (result.Success)
             {
                 await _signInManager.SignInWithClaimsAsync(
                     result.User,
-                    isPersistent: false,  // ← No "remember me" (session ends when browser closes)
+                    isPersistent: false,
                     result.Claims);
 
                 return RedirectToAction("Index", "Home");
             }
 
             ModelState.AddModelError("", "Invalid username or password.");
-            return View(loginVM);
+            return View(model);
         }
     }
 }
