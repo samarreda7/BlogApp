@@ -1,6 +1,10 @@
 ﻿using BlogApp.Core.DTOs;
 using BlogApp.Core.Iservices;
+using BlogApp.Core.Models;
+using BlogApp.Service.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BlogApp.MVC.Controllers
 {
@@ -8,10 +12,17 @@ namespace BlogApp.MVC.Controllers
     {
         private readonly IAuthService _userService;
 
-        // Constructor injection of the service
-        public AuthController(IAuthService userService)
+        private readonly ILogger<AuthController> _logger;
+        private readonly SignInManager<User> _signInManager;
+
+        public AuthController(IAuthService userService,
+            ILogger<AuthController> logger,
+             SignInManager<User> signInManager
+            )
         {
             _userService = userService;
+            _logger = logger;
+            _signInManager = signInManager;
         }
         public IActionResult Register()
         {
@@ -35,6 +46,35 @@ namespace BlogApp.MVC.Controllers
             }
 
             return View(model);
+        }
+        public IActionResult Login()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginDTO loginVM)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(loginVM);
+            }
+
+            var result = await _userService.LoginAsync(loginVM.username, loginVM.password);
+
+            if (result.Success)
+            {
+                await _signInManager.SignInWithClaimsAsync(
+                    result.User,
+                    isPersistent: false,  // ← No "remember me" (session ends when browser closes)
+                    result.Claims);
+
+                return RedirectToAction("Index", "Home");
+            }
+
+            ModelState.AddModelError("", "Invalid username or password.");
+            return View(loginVM);
         }
     }
 }

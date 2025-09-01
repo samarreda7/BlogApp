@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BlogApp.Core.IRepository;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +9,6 @@ namespace BlogApp.Core
 {
     public interface IUnitOfWork
     {
+        IUserRepository userRepository { get; }
     }
 }
