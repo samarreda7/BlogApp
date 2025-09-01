@@ -24,6 +24,18 @@ namespace BlogApp.EF.Repository
             _userManager = userManager;
         }
 
+        public async Task<IdentityResult> CreateUserAsync(User user, string password)
+        {
+            return await _userManager.CreateAsync(user, password);
+        }
+  
+
+        public async Task<IdentityResult> AddUserToRoleAsync(User user, string role)
+        {
+           return await _userManager.AddToRoleAsync(user, role);
+        }
+          
+
         public async Task<User> GetUserByNameAsync(string username)
         {
             return await _userManager.FindByNameAsync(username);

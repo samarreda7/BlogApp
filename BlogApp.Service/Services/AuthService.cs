@@ -16,50 +16,53 @@ namespace BlogApp.Service.Services
 {
     public class AuthService : IAuthService
     {
-        private readonly UserManager<User> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
+  
         IUnitOfWork _unitOfWork;
         private readonly ILogger<AuthService> _logger;
-        public AuthService(UserManager<User> userManager,
-            RoleManager<IdentityRole> roleManager,
+        public AuthService(
             IUnitOfWork unitOfWork,
             ILogger<AuthService> logger
             )
         {
-            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
-            _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
             _unitOfWork = unitOfWork;
             _logger = logger;
         }
 
-        public async Task RegisterAsync(string username, string password)
-        {
-            if (string.IsNullOrWhiteSpace(username))
-                throw new ArgumentException("Username cannot be null or empty.", nameof(username));
-            if (string.IsNullOrWhiteSpace(password))
-                throw new ArgumentException("Password cannot be null or empty.", nameof(password));
 
-            string defaultRole = "User";
+
+        public async Task RegisterAsync(RegisterModel model)
+        {
+            if (string.IsNullOrWhiteSpace(model.username))
+                throw new ArgumentException("Username cannot be null or empty.", nameof(model.username));
+            if (string.IsNullOrWhiteSpace(model.password))
+                throw new ArgumentException("Password cannot be null or empty.", nameof(model.password));
 
             var user = new User
             {
-                UserName = username,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                UserName = model.username,
                 createdAt = DateTime.UtcNow,
                 updateddAt = DateTime.UtcNow
             };
 
-            var createResult = await _userManager.CreateAsync(user, password);
+            await CreateUserAndAssignRoleAsync(user, model.password, "User");
+        }
+
+        private async Task CreateUserAndAssignRoleAsync(User user, string password, string role)
+        {
+            var createResult = await _unitOfWork.userRepository.CreateUserAsync(user, password);
             if (!createResult.Succeeded)
             {
                 var errors = string.Join("; ", createResult.Errors.Select(e => e.Description));
                 throw new InvalidOperationException($"User creation failed: {errors}");
             }
 
-            var addToRoleResult = await _userManager.AddToRoleAsync(user, defaultRole);
-            if (!addToRoleResult.Succeeded)
+            var roleResult = await _unitOfWork.userRepository.AddUserToRoleAsync(user, role);
+            if (!roleResult.Succeeded)
             {
-                var roleErrors = string.Join("; ", addToRoleResult.Errors.Select(e => e.Description));
-                throw new InvalidOperationException($"Failed to assign role '{defaultRole}' to user '{user.UserName}': {roleErrors}");
+                var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Role assignment failed: {errors}");
             }
         }
 
@@ -70,7 +73,6 @@ namespace BlogApp.Service.Services
             {
                 return new LoginResult { Success = false };
             }
-
             if (string.IsNullOrWhiteSpace(password))
             {
                 return new LoginResult { Success = false };
@@ -98,7 +100,6 @@ namespace BlogApp.Service.Services
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim("uid", user.Id)
             };
-
                 return new LoginResult
                 {
                     Success = true,

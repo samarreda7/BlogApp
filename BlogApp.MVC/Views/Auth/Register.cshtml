@@ -18,7 +18,18 @@
                 <form asp-action="Register" method="post">
                     @* <hr /> *@ 
                     <div asp-validation-summary="All" class="text-danger mb-3"></div> 
+                    <div class="mb-3">
 
+                        <label asp-for="FirstName" class="form-label"></label>
+                        <input asp-for="FirstName" class="form-control" autocomplete="FirstName" aria-required="true" placeholder="Choose a First Name" />
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+
+                        <label asp-for="LastName" class="form-label"></label>
+                        <input asp-for="LastName" class="form-control" autocomplete="LastName" aria-required="true" placeholder="Choose a Last Name" />
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
                     <div class="mb-3">
                         
                         <label asp-for="username" class="form-label"></label>
@@ -34,8 +45,13 @@
 
                     <div class="mb-3">
                         <label asp-for="ConfirmPassword" class="form-label"></label>
-                        <input asp-for="ConfirmPassword" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Confirm your password" />
-                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        <input asp-for="ConfirmPassword"
+                               type="password"
+                               class="form-control"
+                               autocomplete="new-password"
+                               aria-required="true"
+                               placeholder="Confirm your password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger" id="ConfirmPassword-validation"></span>
                     </div>
 
                     <div class="d-grid gap-2">
@@ -52,6 +68,27 @@
     </div>
 </div>
 
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('ConfirmPassword');
+            const validationSpan = document.getElementById('ConfirmPassword-validation');
+
+            function validateMatch() {
+                if (confirmPasswordInput.value && confirmPasswordInput.value !== passwordInput.value) {
+                    confirmPasswordInput.setCustomValidity('Passwords do not match.');
+                    validationSpan.textContent = 'The passwords must be the same.';
+                } else {
+                    confirmPasswordInput.setCustomValidity('');
+                    validationSpan.textContent = '';
+                }
+            }
+
+            passwordInput.addEventListener('input', validateMatch);
+            confirmPasswordInput.addEventListener('input', validateMatch);
+        });
+    </script>
 }

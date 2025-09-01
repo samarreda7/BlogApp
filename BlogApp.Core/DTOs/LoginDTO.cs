@@ -9,6 +9,8 @@ namespace BlogApp.Core.DTOs
 {
     public class LoginDTO
     {
+
+
         [Required]
         [Display(Name = "Username")]
         public string username { get; set; }

@@ -11,12 +11,11 @@ namespace BlogApp.MVC.Controllers
     public class AuthController : Controller
     {
         private readonly IAuthService _userService;
-
         private readonly ILogger<AuthController> _logger;
         private readonly SignInManager<User> _signInManager;
 
         public AuthController(IAuthService userService,
-            ILogger<AuthController> logger,
+             ILogger<AuthController> logger,
              SignInManager<User> signInManager
             )
         {
@@ -36,8 +35,8 @@ namespace BlogApp.MVC.Controllers
             {
                 try
                 {
-                    await _userService.RegisterAsync(model.username, model.password);
-                    return RedirectToAction("Index", "Home");
+                    await _userService.RegisterAsync(model);
+                    return RedirectToAction("Auth", "Login");
                 }
                 catch (Exception ex)
                 {
