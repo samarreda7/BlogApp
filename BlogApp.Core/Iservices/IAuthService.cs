@@ -6,5 +6,6 @@ namespace BlogApp.Core.Iservices
     {
         Task RegisterAsync(RegisterModel model);
         Task<LoginResult> LoginAsync(string username, string password);
+         void LogOut();
     }
 }

@@ -117,6 +117,10 @@ namespace BlogApp.Service.Services
                 };
             }
         }
+       public async void LogOut()
+        {
+            await _signInManager.SignOutAsync();
+        }
     }
 }
 

@@ -75,5 +75,12 @@ namespace BlogApp.MVC.Controllers
             ModelState.AddModelError("", "Invalid username or password.");
             return View(model);
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            _userService.LogOut();
+            return RedirectToAction("Index", "Home");
+        }
     }
 }
