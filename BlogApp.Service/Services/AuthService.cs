@@ -1,12 +1,7 @@
-﻿
+﻿using Microsoft.AspNetCore.Identity;
 using BlogApp.Core.Iservices;
 using BlogApp.Core.Models;
 using BlogApp.EF;
-using Microsoft.AspNetCore.Identity;
-using BlogApp.Core.Models;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using BlogApp.Core;
 using BlogApp.Core.DTOs;
 using Microsoft.Extensions.Logging;
@@ -19,13 +14,16 @@ namespace BlogApp.Service.Services
   
         IUnitOfWork _unitOfWork;
         private readonly ILogger<AuthService> _logger;
+        private readonly SignInManager<User> _signInManager;
         public AuthService(
             IUnitOfWork unitOfWork,
-            ILogger<AuthService> logger
+            ILogger<AuthService> logger,
+            SignInManager<User> signInManager
             )
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _signInManager = signInManager;
         }
 
 
@@ -97,9 +95,12 @@ namespace BlogApp.Service.Services
                 var claims = new List<Claim>
             {
                 new Claim("email", user.Email ?? user.UserName),
-                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim("Firstname", user.FirstName),
+                new Claim("Lastname", user.LastName),
                 new Claim("uid", user.Id)
+
             };
+                await _signInManager.SignInAsync(user, isPersistent: false); 
                 return new LoginResult
                 {
                     Success = true,

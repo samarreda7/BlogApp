@@ -36,7 +36,7 @@ namespace BlogApp.MVC.Controllers
                 try
                 {
                     await _userService.RegisterAsync(model);
-                    return RedirectToAction("Auth", "Login");
+                    return RedirectToAction("Login", "Auth");
                 }
                 catch (Exception ex)
                 {
