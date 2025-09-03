@@ -2,7 +2,45 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-</div>
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <!-- Main Header -->
+        <h1 class="display-4 fw-bold text-primary mb-3">
+            Welcome to BlogApp
+        </h1>
+        <p class="lead text-muted mb-4">
+            Share your thoughts, stories, and ideas with the world.
+        </p>
 
+        <div class="d-grid gap-3 d-sm-flex justify-content-center mt-4">
+            <!-- Primary Button: Write Post -->
+            <a asp-controller="Post" asp-action="Create" class="btn btn-success btn-lg px-4 py-3 shadow-sm">
+                <i class="bi bi-pencil-square me-2"></i> Write a New Post
+            </a>
+
+            <!-- Secondary Button: Show My Posts (Only if logged in) -->
+            @if (User.Identity.IsAuthenticated)
+            {
+                <a asp-controller="Post" asp-action="MyPosts" class="btn btn-outline-primary btn-lg px-4 py-3">
+                    <i class="bi bi-journal-text me-2"></i> Show My Posts
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Optional: Info Section -->
+    <div class="row mt-5 text-center">
+        <div class="col-md-4">
+            <h5>📝 Write Freely</h5>
+            <p class="text-muted">Express yourself with rich text and formatting.</p>
+        </div>
+        <div class="col-md-4">
+            <h5>👥 Share Instantly</h5>
+            <p class="text-muted">Publish your posts and reach your audience.</p>
+        </div>
+        <div class="col-md-4">
+            <h5>🔐 Stay Secure</h5>
+            <p class="text-muted">Your content is safe with secure login and roles.</p>
+        </div>
+    </div>
+</div>

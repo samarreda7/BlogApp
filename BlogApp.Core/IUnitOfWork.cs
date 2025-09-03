@@ -10,5 +10,6 @@ namespace BlogApp.Core
     public interface IUnitOfWork
     {
         IUserRepository userRepository { get; }
+        IPostRepository postRepository { get; }
     }
 }

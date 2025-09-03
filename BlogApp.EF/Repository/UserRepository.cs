@@ -18,10 +18,11 @@ namespace BlogApp.EF.Repository
     public class UserRepository : IUserRepository
     {
         private readonly UserManager<User> _userManager;
-
-        public UserRepository(UserManager<User> userManager)
+        AppDbContext _context;
+        public UserRepository(AppDbContext Context, UserManager<User> userManager)
         {
             _userManager = userManager;
+            _context = Context;
         }
 
         public async Task<IdentityResult> CreateUserAsync(User user, string password)
@@ -39,6 +40,11 @@ namespace BlogApp.EF.Repository
         public async Task<User> GetUserByNameAsync(string username)
         {
             return await _userManager.FindByNameAsync(username);
+        }
+
+        public async Task<User> GetUserByIdAsync(string Id)
+        {
+            return await _context.Users.FindAsync(Id);
         }
 
         public async Task<bool> ValidatePasswordAsync(User user, string password)

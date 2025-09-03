@@ -15,12 +15,14 @@ namespace BlogApp.EF
         private readonly IConfiguration _config;
 
         public IUserRepository userRepository {  get; private set; }
+        public IPostRepository postRepository { get; private set; }
 
         public UnitOfWork(AppDbContext context, UserManager<User> userManager, IConfiguration config, RoleManager<IdentityRole> roleManager) 
         {
             _context = context;
             _config = config;
-            userRepository = new UserRepository(userManager);
+            userRepository = new UserRepository(_context,userManager);
+            postRepository = new PostRepository(_context);
         }
     }
 }

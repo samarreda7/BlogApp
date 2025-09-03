@@ -16,5 +16,6 @@ namespace BlogApp.Core.IRepository
         Task<IdentityResult> AddUserToRoleAsync(User user, string role);
         Task<User> GetUserByNameAsync(string username);
         Task<bool> ValidatePasswordAsync(User user, string password);
+        Task<User> GetUserByIdAsync(string Id);
     }
 }
