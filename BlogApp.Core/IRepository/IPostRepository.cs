@@ -11,5 +11,6 @@ namespace BlogApp.Core.IRepository
     {
         void CreatePost(PostModelDTO model, string id);
         List<ShowPostsDTO> GetMyPosts(string id);
+        void DeletePost(int id);
     }
 }

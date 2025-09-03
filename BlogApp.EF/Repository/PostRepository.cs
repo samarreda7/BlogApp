@@ -35,6 +35,7 @@ namespace BlogApp.EF.Repository
             var posts = _context.Posts.Where(p => p.UserId == id).Include(p => p.User)
                 .Select(p=> new ShowPostsDTO
                 { 
+                    Id = p.Id,
                     FirstName=p.User.FirstName,
                     username=p.User.UserName,
                     CreatedAt=p.CreatedAt,
@@ -44,5 +45,20 @@ namespace BlogApp.EF.Repository
             return posts;
            
         }
+
+        public void DeletePost(int id)
+        {
+            var post = _context.Posts.FirstOrDefault(p => p.Id == id);
+            if (post != null)
+            {
+                _context.Posts.Remove(post);
+                _context.SaveChanges();
+            }
+            else 
+            {
+                throw new Exception("there is no Post with this Id");
+            }
+        }
+
     }
 }

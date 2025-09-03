@@ -11,5 +11,6 @@ namespace BlogApp.Core.Iservices
     {
         Task<(bool Success, string ErrorMessage)> CreatePostAsync(PostModelDTO model, string userId);
         Task<List<ShowPostsDTO>> GetMyPostsAsync(string userId);
+        Task<(bool Success, string ErrorMessage)> DeletePost(int Id);
     }
 }

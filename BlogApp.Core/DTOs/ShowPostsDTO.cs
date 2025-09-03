@@ -9,6 +9,7 @@ namespace BlogApp.Core.DTOs
 {
     public class ShowPostsDTO
     {
+        public int Id { get; set; }
         public string FirstName { get; set; }
         public string username { get; set; }
         public DateTime CreatedAt  { get; set; }

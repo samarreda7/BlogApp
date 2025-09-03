@@ -62,6 +62,20 @@ namespace BlogApp.MVC.Controllers
             return View(posts);
         }
 
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Invalid post ID.");
+            }
 
+            await _postService.DeletePost(id);
+
+            TempData["Message"] = "Post deleted successfully.";
+            return RedirectToAction("MyPosts", "Post");
+        }
     }
 }
