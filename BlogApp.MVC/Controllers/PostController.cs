@@ -51,6 +51,17 @@ namespace BlogApp.MVC.Controllers
             TempData["SuccessMessage"] = "Your post has been published!";
             return RedirectToAction("Index", "Home");
         }
-    
+
+        [Authorize]
+        public async Task<IActionResult> MyPosts()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return Challenge();
+
+            var posts = await _postService.GetMyPostsAsync(userId);
+            return View(posts);
+        }
+
+
     }
 }

@@ -10,5 +10,6 @@ namespace BlogApp.Core.Iservices
     public interface IPostService
     {
         Task<(bool Success, string ErrorMessage)> CreatePostAsync(PostModelDTO model, string userId);
+        Task<List<ShowPostsDTO>> GetMyPostsAsync(string userId);
     }
 }

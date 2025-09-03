@@ -4,21 +4,28 @@
 
 <div class="container py-5">
     <div class="text-center mb-5">
-        <!-- Main Header -->
+       
         <h1 class="display-4 fw-bold text-primary mb-3">
-            Welcome to BlogApp
+            Welcome to MindJourney
         </h1>
         <p class="lead text-muted mb-4">
             Share your thoughts, stories, and ideas with the world.
         </p>
 
         <div class="d-grid gap-3 d-sm-flex justify-content-center mt-4">
-            <!-- Primary Button: Write Post -->
+            @if(User.Identity.IsAuthenticated)
+            {
             <a asp-controller="Post" asp-action="Create" class="btn btn-success btn-lg px-4 py-3 shadow-sm">
                 <i class="bi bi-pencil-square me-2"></i> Write a New Post
             </a>
-
-            <!-- Secondary Button: Show My Posts (Only if logged in) -->
+            }
+            else
+            {
+            <a asp-controller="Auth" asp-action="Register" class="btn btn-success btn-lg px-4 py-3 shadow-sm">
+                <i class="bi bi-pencil-square me-2"></i> Write a New Post
+            </a>
+            }
+            
             @if (User.Identity.IsAuthenticated)
             {
                 <a asp-controller="Post" asp-action="MyPosts" class="btn btn-outline-primary btn-lg px-4 py-3">
@@ -28,7 +35,6 @@
         </div>
     </div>
 
-    <!-- Optional: Info Section -->
     <div class="row mt-5 text-center">
         <div class="col-md-4">
             <h5>📝 Write Freely</h5>

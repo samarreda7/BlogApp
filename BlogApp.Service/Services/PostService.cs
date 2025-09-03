@@ -39,5 +39,14 @@ namespace BlogApp.Service.Services
                 return (false, "An error occurred while saving the post. Please try again.");
             }
         }
+
+        public async Task<List<ShowPostsDTO>> GetMyPostsAsync(string userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                throw new ArgumentException("User ID cannot be null or empty.", nameof(userId));
+
+            return await Task.Run(() => _unitOfWork.postRepository.GetMyPosts(userId));
+        }
+
     }
 }

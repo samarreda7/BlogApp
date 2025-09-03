@@ -10,5 +10,6 @@ namespace BlogApp.Core.IRepository
     public interface IPostRepository
     {
         void CreatePost(PostModelDTO model, string id);
+        List<ShowPostsDTO> GetMyPosts(string id);
     }
 }
