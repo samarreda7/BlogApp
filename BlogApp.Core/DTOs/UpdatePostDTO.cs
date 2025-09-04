@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace BlogApp.Core.DTOs
 {
-    public class ShowPostsDTO
+    public class UpdatePostDTO
     {
         public int Id { get; set; }
-        public string FirstName { get; set; }
-        public string username { get; set; }
-        public DateTime CreatedAt  { get; set; }
-        public DateTime updateat { get; set; }
+
+        [Required(ErrorMessage = "Content is required.")]
         public string Content { get; set; }
     }
 }

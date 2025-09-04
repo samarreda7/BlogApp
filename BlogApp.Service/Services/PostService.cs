@@ -1,6 +1,7 @@
 ﻿using BlogApp.Core;
 using BlogApp.Core.Iservices;
 using BlogApp.Core.DTOs;
+using BlogApp.Core.Models;
 
 
 namespace BlogApp.Service.Services
@@ -63,6 +64,55 @@ namespace BlogApp.Service.Services
                 return (false, "An error occurred while saving the post. Please try again.");
             }
 
+        }
+
+        public async Task<Post> GetPostById(int Id)
+        {
+           return await _unitOfWork.postRepository.GetPost(Id);
+        }
+
+        public async Task<UpdatePostDTO> GetPostForEditAsync(int id)
+        {
+            var post = await _unitOfWork.postRepository.GetPost(id);
+            if (post == null) return null;
+
+            return new UpdatePostDTO
+            {
+                Id = post.Id,
+                Content = post.content,
+            };
+        }
+
+
+        public async Task<(bool Success, string ErrorMessage)> EditPost(int id, UpdatePostDTO dto)
+        {
+            if (dto == null)
+                return (false, "Update data cannot be null.");
+
+            var post = await _unitOfWork.postRepository.GetPost(id);
+
+            if (post == null)
+                return (false, "Post not found.");
+
+            string currentContent =  post.content?.Trim();
+            string newContent = dto.Content?.Trim();
+
+            if (currentContent == newContent)
+            {
+                return (false, "No changes detected.");
+            }
+
+            
+            post.content = dto.Content;
+            post.UpdatedAt = DateTime.Now;
+
+            var saved = await  _unitOfWork.postRepository.UpdatePost(post); 
+
+            if (!saved)
+                return (false, "Failed to save changes to the database.");
+
+            return (true, "Post updated successfully.");
+        
         }
 
     }

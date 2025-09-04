@@ -39,6 +39,7 @@ namespace BlogApp.EF.Repository
                     FirstName=p.User.FirstName,
                     username=p.User.UserName,
                     CreatedAt=p.CreatedAt,
+                    updateat=p.UpdatedAt,
                     Content=p.content
 
                 }).ToList();
@@ -57,6 +58,26 @@ namespace BlogApp.EF.Repository
             else 
             {
                 throw new Exception("there is no Post with this Id");
+            }
+        }
+        public async Task<Post> GetPost(int id)
+        {
+            return await _context.Posts.FirstOrDefaultAsync(p=>p.Id==id);
+
+        }
+        public async Task<bool> UpdatePost(Post post)
+        {
+          
+            try
+            {
+              _context.Posts.Update(post);
+              return await  _context.SaveChangesAsync() > 0;
+
+            }
+            catch
+            {
+               
+                return false;
             }
         }
 

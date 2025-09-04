@@ -11,6 +11,8 @@ namespace BlogApp.Core.DTOs
 {
     public class PostModelDTO
     {
+        public int Id { get; set; }
+
         [Required(ErrorMessage = "Content is required.")]
         [DataType(DataType.MultilineText)]
         [Display(Name = "Write your post")]

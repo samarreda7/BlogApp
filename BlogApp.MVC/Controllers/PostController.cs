@@ -77,5 +77,33 @@ namespace BlogApp.MVC.Controllers
             TempData["Message"] = "Post deleted successfully.";
             return RedirectToAction("MyPosts", "Post");
         }
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var model = await _postService.GetPostForEditAsync(id);
+            if (model == null)
+                return NotFound();
+
+            return View(model); 
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(UpdatePostDTO model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var (Success, Message) = await _postService.EditPost(model.Id, model);
+
+            if (!Success)
+            {
+                ModelState.AddModelError("", Message);
+                return View(model);
+            }
+
+            TempData["Message"] = Message;
+            return RedirectToAction("MyPosts");
+        }
     }
 }
