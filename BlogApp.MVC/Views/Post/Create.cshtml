@@ -13,9 +13,10 @@
             <form asp-action="Create" method="post">
                 <div class="mb-3">
                     <label asp-for="content" class="form-label">What's on your mind?</label>
-                    <textarea asp-for="content"
-                              class="form-control"
-                              rows="10"
+                    <textarea style="resize: none;" asp-for="content"
+                              class="form-control "
+                              maxlength="500"
+                              rows="9"
                               placeholder="Start writing your post here..."></textarea>
                     <span asp-validation-for="content" class="text-danger"></span>
                 </div>

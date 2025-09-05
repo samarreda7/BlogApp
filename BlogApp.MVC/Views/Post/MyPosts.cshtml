@@ -4,8 +4,15 @@
     ViewData["Title"] = "My Posts";
 }
 
-<div class="container mt-4">
+<div class="container mt-5">
     <h2 class="mb-4">Your Posts</h2>
+
+    <!-- Write New Post Button - Now at the top -->
+    <div class="mb-4">
+        <a asp-action="Create" class="btn btn-primary btn-lg px-4 d-inline-flex align-items-center">
+            <i class="bi bi-plus-circle me-2"></i> Write New Post
+        </a>
+    </div>
 
     @if (!Model.Any())
     {
@@ -13,53 +20,83 @@
     }
     else
     {
-        <div class="row">
+        <div class="feed">
             @foreach (var post in Model)
             {
-                <div class="col-md-6 col-lg-8 mb-4">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                @post.FirstName @("@")@post.username
-                            </h5>
-                            @{
-                                var created = post.CreatedAt;
-                                var updated = post.updateat;
-                                var isUpdated = (updated - created).TotalMinutes > 1; // if more than 1 min apart
-                            }
-                            @if (!isUpdated)
-                            {
-                                <p class="card-text text-muted small">
-                                    <i>Posted on @created.ToString("MMM dd, yyyy")</i>
-                                </p>
-                            }
-                            else
-                            {
-                                <p class="card-text text-muted small">
-                                    <i>Posted on @updated.ToString("MMM dd, yyyy")</i>
-                                    <i>(Updated)</i>
-                                </p>
-                            }
-                           
-                            <p class="card-text">@post.Content</p>
-                            <form asp-action="Delete" method="post" onsubmit="return confirm('Are you sure you want to delete this post?');">
-                                <input type="hidden" name="id" value="@post.Id" />
-                                <button type="submit" class="btn btn-outline-secondary">Delete</button>
-                            </form>
+                <div class="card mb-4 shadow-sm border-light position-relative">
+                    
+                    <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
+                        
+                        <form asp-controller="Post" asp-action="Edit" method="get" class="d-inline">
+                            <input type="hidden" name="id" value="@post.Id" />
+                            <button type="submit"
+                                    class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 px-2 py-1"
+                                    style="font-size: 0.875rem;">
+                                <i class="bi bi-pencil"></i> Edit
+                            </button>
+                        </form>
 
-                            <form asp-controller="Post" asp-action="Edit" method="get" style="display:inline;">
-                                <input type="hidden" name="id" value="@post.Id" />
-                                <button type="submit"
-                                        class="btn btn-outline-primary ">
-                                    <i class="bi bi-journal-text me-2"></i> Edit
-                                </button>
-                            </form>
+                        <form asp-action="Delete" method="post" class="d-inline"
+                              onsubmit="return confirm('Are you sure you want to delete this post?');">
+                            <input type="hidden" name="id" value="@post.Id" />
+                            <button type="submit"
+                                    class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 px-2 py-1"
+                                    style="font-size: 0.875rem;">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Post Body -->
+                    <div class="card-body pt-4">
+                        <!-- User Info -->
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle bg-primary text-white text-center me-3 d-flex align-items-center justify-content-center"
+                                 style="width: 40px; height: 40px; font-size: 1rem;">
+                                @post.FirstName[0]
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">@post.FirstName</h6>
+                                <small class="text-muted">@@@post.username</small>
+                            </div>
+                        </div>
+
+                        <!-- Post Content -->
+                        <div class="post-content mb-3">
+                            <p class="mb-0">@post.Content</p>
+                        </div>
+
+                        <!-- Timestamp -->
+                        @{
+                            var created = post.CreatedAt;
+                            var updated = post.updateat;
+                            var isUpdated = (updated - created).TotalMinutes > 1;
+                        }
+                        <small class="text-muted">
+                            @created.ToString("MMM dd, yyyy 'at' h:mm tt")
+                            @if (isUpdated)
+                            {
+                                <span class="fst-italic">(edited)</span>
+                            }
+                        </small>
+
+                        <hr class="my-3" />
+
+                        <!-- Action Buttons -->
+                        <div class="post-actions d-flex justify-content-between align-items-center mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1">
+                                <i class="bi bi-heart"></i> Like
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                                <i class="bi bi-chat"></i> Comment
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                                <i class="bi bi-share"></i> Share
+                            </button>
                         </div>
                     </div>
                 </div>
             }
         </div>
     }
-
-    <a asp-action="Create" class="btn btn-outline-secondary">Write New Post</a>
 </div>

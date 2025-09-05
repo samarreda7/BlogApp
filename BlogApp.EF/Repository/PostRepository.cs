@@ -42,7 +42,9 @@ namespace BlogApp.EF.Repository
                     updateat=p.UpdatedAt,
                     Content=p.content
 
-                }).ToList();
+                })
+                .OrderByDescending(p => p.CreatedAt)
+                .ToList();
             return posts;
            
         }

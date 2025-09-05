@@ -49,7 +49,7 @@ namespace BlogApp.MVC.Controllers
                 return View(model);
             }
             TempData["SuccessMessage"] = "Your post has been published!";
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("MyPosts", "Post");
         }
 
         [Authorize]
