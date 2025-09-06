@@ -17,5 +17,6 @@ namespace BlogApp.Core.IRepository
         Task<User> GetUserByNameAsync(string username);
         Task<bool> ValidatePasswordAsync(User user, string password);
         Task<User> GetUserByIdAsync(string Id);
+        Task<List<UserSearchDTO>> SearchUsersAsync(string query);
     }
 }

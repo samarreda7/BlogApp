@@ -4,6 +4,7 @@ using BlogApp.Core.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Exchange.WebServices.Data;
 using System.Net;
 
 namespace BlogApp.MVC.Controllers
@@ -104,6 +105,30 @@ namespace BlogApp.MVC.Controllers
 
             TempData["Message"] = Message;
             return RedirectToAction("MyPosts");
+        }
+
+        [HttpGet]
+        [Route("Post/Profile/{username}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> UserProfile(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+                return NotFound();
+
+            var posts = await _postService.GetPostsByUserIdAsync(username);
+
+            if (!posts.Any())
+            {
+                ViewBag.FirstName = "User";
+                ViewBag.username = username;
+            }
+            else
+            {
+                ViewBag.FirstName = posts[0].FirstName;
+                ViewBag.username = posts[0].username;
+            }
+
+            return View("UserPosts", posts); 
         }
     }
 }

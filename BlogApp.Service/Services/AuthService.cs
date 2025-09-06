@@ -121,6 +121,10 @@ namespace BlogApp.Service.Services
         {
             await _signInManager.SignOutAsync();
         }
+        public async Task<List<UserSearchDTO>> SearchUsersAsync(string query)
+        {
+            return await _unitOfWork.userRepository.SearchUsersAsync(query);
+        }
     }
 }
 

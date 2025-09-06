@@ -2,6 +2,7 @@
 using BlogApp.Core.Iservices;
 using BlogApp.Core.Models;
 using BlogApp.Service.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -81,6 +82,23 @@ namespace BlogApp.MVC.Controllers
         {
             _userService.LogOut();
             return RedirectToAction("Index", "Home");
+        }
+
+        [HttpGet]
+        [Authorize]
+        public IActionResult Search()
+        {
+            return View();
+        }
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> SearchUsers(string q)
+        {
+            if (string.IsNullOrWhiteSpace(q))
+                return Json(new List<UserSearchDTO>());
+
+            var users = await _userService.SearchUsersAsync(q);
+            return Json(users);
         }
     }
 }

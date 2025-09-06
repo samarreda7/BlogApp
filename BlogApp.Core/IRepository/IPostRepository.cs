@@ -16,6 +16,8 @@ namespace BlogApp.Core.IRepository
         void DeletePost(int id);
         Task<Post> GetPost(int id);
         Task<bool> UpdatePost(Post post);
-     
+        List<ShowPostsDTO> GetUserPosts(string username);
+
+
     }
 }

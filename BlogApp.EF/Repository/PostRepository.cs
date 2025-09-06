@@ -82,6 +82,25 @@ namespace BlogApp.EF.Repository
                 return false;
             }
         }
+      
+        public List<ShowPostsDTO> GetUserPosts(string username)
+        {
+            var posts = _context.Posts.Where(p => p.User.UserName == username).Include(p => p.User)
+                .Select(p => new ShowPostsDTO
+                {
+                    Id = p.Id,
+                    FirstName = p.User.FirstName,
+                    username = p.User.UserName,
+                    CreatedAt = p.CreatedAt,
+                    updateat = p.UpdatedAt,
+                    Content = p.content
+
+                })
+                .OrderByDescending(p => p.CreatedAt)
+                .ToList();
+            return posts;
+
+        }
 
     }
 }

@@ -53,6 +53,25 @@ namespace BlogApp.EF.Repository
             return await _userManager.CheckPasswordAsync(user, password);
         }
 
+        // UserRepository.cs
+        public async Task<List<UserSearchDTO>> SearchUsersAsync(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return new List<UserSearchDTO>();
+
+            return await _context.Users
+                .Where(u => u.FirstName.Contains(query) ||
+                            u.UserName.Contains(query))
+                .Select(u => new UserSearchDTO
+                {
+                    Id = u.Id,
+                    FirstName = u.FirstName,
+                    UserName = u.UserName
+                })
+                .Take(10)
+                .ToListAsync();
+        }
+
 
     }
 }

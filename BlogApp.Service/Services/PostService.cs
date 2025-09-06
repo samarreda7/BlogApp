@@ -115,6 +115,15 @@ namespace BlogApp.Service.Services
         
         }
 
+        public async Task<List<ShowPostsDTO>> GetPostsByUserIdAsync(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+                throw new ArgumentException("User ID cannot be null or empty.", nameof(username));
+
+            return await Task.Run(() => _unitOfWork.postRepository.GetUserPosts(username));
+        }
+
+
     }
 
 }
