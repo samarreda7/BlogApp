@@ -12,10 +12,9 @@ namespace BlogApp.Core.Iservices
     {
         Task<(bool Success, string ErrorMessage)> CreatePostAsync(PostModelDTO model, string userId);
         Task<List<ShowPostsDTO>> GetMyPostsAsync(string userId);
-        Task<Post> GetPostById(int Id);
         Task<(bool Success, string ErrorMessage)> DeletePost(int Id);
         Task<UpdatePostDTO> GetPostForEditAsync(int id);
         Task<(bool Success, string ErrorMessage)> EditPost(int id, UpdatePostDTO updPost);
-        Task<List<ShowPostsDTO>> GetPostsByUserIdAsync(string userId);
+        Task<List<ShowPostsDTO>> GetPostsByUserIdAsync(string userId, string currentUserId);
     }
 }

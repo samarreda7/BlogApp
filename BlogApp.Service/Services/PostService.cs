@@ -2,6 +2,8 @@
 using BlogApp.Core.Iservices;
 using BlogApp.Core.DTOs;
 using BlogApp.Core.Models;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 
 
 namespace BlogApp.Service.Services
@@ -9,10 +11,15 @@ namespace BlogApp.Service.Services
     public class PostService : IPostService
     {
         private readonly IUnitOfWork _unitOfWork;
-
-        public PostService(IUnitOfWork unitOfWork)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+       private readonly IPostLikeService _postLikeService;
+        public PostService(IUnitOfWork unitOfWork, 
+            IHttpContextAccessor httpContextAccessor,
+              IPostLikeService postLikeService)
         {
             _unitOfWork = unitOfWork;
+            _httpContextAccessor = httpContextAccessor;
+            _postLikeService = postLikeService;
         }
 
         public async Task<(bool Success, string ErrorMessage)> CreatePostAsync(PostModelDTO model, string userId)
@@ -46,30 +53,30 @@ namespace BlogApp.Service.Services
             if (string.IsNullOrWhiteSpace(userId))
                 throw new ArgumentException("User ID cannot be null or empty.", nameof(userId));
 
-            return await Task.Run(() => _unitOfWork.postRepository.GetMyPosts(userId));
-        }
-        public async Task<(bool Success, string ErrorMessage)> DeletePost(int Id)
-        {
-            if (Id == null)
+           
+            var posts = await Task.Run(() => _unitOfWork.postRepository.GetMyPosts(userId));
+
+            if (!posts.Any()) return posts;
+
+            var postIds = posts.Select(p => p.Id).ToList();
+
+           
+            var likeCounts = await _postLikeService.GetLikeCountsForPostsAsync(postIds);
+
+            
+            var userLikeStatus = await _postLikeService.GetUserLikeStatusForPostsAsync(postIds, userId);
+
+           
+            foreach (var post in posts)
             {
-                return (false, "Post Id is null.");
+                post.LikeCount = likeCounts.GetValueOrDefault(post.Id, 0);
+                post.IsLikedByCurrentUser = userLikeStatus.GetValueOrDefault(post.Id, false);
             }
-            try
-            {
-                _unitOfWork.postRepository.DeletePost(Id);
-                return (true, null);
-            }
-            catch (Exception ex)
-            {
-                return (false, "An error occurred while saving the post. Please try again.");
-            }
+
+            return posts;
 
         }
 
-        public async Task<Post> GetPostById(int Id)
-        {
-           return await _unitOfWork.postRepository.GetPost(Id);
-        }
 
         public async Task<UpdatePostDTO> GetPostForEditAsync(int id)
         {
@@ -115,15 +122,59 @@ namespace BlogApp.Service.Services
         
         }
 
-        public async Task<List<ShowPostsDTO>> GetPostsByUserIdAsync(string username)
+        public async Task<List<ShowPostsDTO>> GetPostsByUserIdAsync(string username , string currentUserId)
         {
             if (string.IsNullOrWhiteSpace(username))
-                throw new ArgumentException("User ID cannot be null or empty.", nameof(username));
+                throw new ArgumentException("Username cannot be null or empty.", nameof(username));
 
-            return await Task.Run(() => _unitOfWork.postRepository.GetUserPosts(username));
+            var posts = _unitOfWork.postRepository.GetUserPosts(username, currentUserId);
+
+            if (!posts.Any()) return posts;
+
+            var postIds = posts.Select(p => p.Id).ToList();
+
+           
+            var likeCounts = await _postLikeService.GetLikeCountsForPostsAsync(postIds);
+
+        
+            if (_httpContextAccessor?.HttpContext?.User?.Identity?.IsAuthenticated == true)
+            {
+                currentUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            }
+
+            
+            var userLikeStatus = new Dictionary<int, bool>();
+            if (!string.IsNullOrEmpty(currentUserId))
+            {
+                userLikeStatus = await _postLikeService.GetUserLikeStatusForPostsAsync(postIds, currentUserId);
+            }
+
+            
+            foreach (var post in posts)
+            {
+                post.LikeCount = likeCounts.GetValueOrDefault(post.Id, 0);
+                post.IsLikedByCurrentUser = userLikeStatus.GetValueOrDefault(post.Id, false);
+            }
+
+            return posts;
         }
 
-
+        public async Task<(bool Success, string ErrorMessage)> DeletePost(int Id)
+        {
+            if (Id == null)
+            {
+                return (false, "Post Id is null.");
+            }
+            try
+            {
+                _unitOfWork.postRepository.DeletePost(Id);
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                return (false, "An error occurred while saving the post. Please try again.");
+            }
+        }
     }
 
 }

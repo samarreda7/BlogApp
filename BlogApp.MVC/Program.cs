@@ -29,6 +29,10 @@ namespace BlogApp.MVC
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IPostService, PostService>();
+            builder.Services.AddScoped<IPostLikeRepository, PostLikeRepository>();
+            builder.Services.AddScoped<IPostLikeService, PostLikeService>();
+            builder.Services.AddHttpContextAccessor();
+
             var app = builder.Build();
             
          

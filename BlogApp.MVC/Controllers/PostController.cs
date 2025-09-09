@@ -1,11 +1,14 @@
 ﻿using BlogApp.Core.DTOs;
 using BlogApp.Core.Iservices;
 using BlogApp.Core.Models;
+using BlogApp.Service.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Exchange.WebServices.Data;
 using System.Net;
+using System.Security.Claims;
 
 namespace BlogApp.MVC.Controllers
 {
@@ -13,11 +16,17 @@ namespace BlogApp.MVC.Controllers
     {
 
         IPostService _postService;
+        IPostLikeService _postLikeService;
         private readonly UserManager<User> _userManager;
-        public PostController(IPostService postService, UserManager<User> userManager)
+        
+        public PostController(IPostService postService,
+            UserManager<User> userManager,
+            IPostLikeService postLikeService
+            )
         {
             _postService = postService;
             _userManager = userManager;
+            _postLikeService = postLikeService;
         }
 
         [HttpGet]
@@ -63,6 +72,8 @@ namespace BlogApp.MVC.Controllers
             return View(posts);
         }
 
+
+
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -78,6 +89,8 @@ namespace BlogApp.MVC.Controllers
             TempData["Message"] = "Post deleted successfully.";
             return RedirectToAction("MyPosts", "Post");
         }
+
+
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
@@ -107,6 +120,8 @@ namespace BlogApp.MVC.Controllers
             return RedirectToAction("MyPosts");
         }
 
+
+
         [HttpGet]
         [Route("Post/Profile/{username}")]
         [AllowAnonymous]
@@ -114,8 +129,8 @@ namespace BlogApp.MVC.Controllers
         {
             if (string.IsNullOrWhiteSpace(username))
                 return NotFound();
-
-            var posts = await _postService.GetPostsByUserIdAsync(username);
+            var userId = _userManager.GetUserId(User);
+            var posts = await _postService.GetPostsByUserIdAsync(username,userId);
 
             if (!posts.Any())
             {
@@ -128,7 +143,29 @@ namespace BlogApp.MVC.Controllers
                 ViewBag.username = posts[0].username;
             }
 
-            return View("UserPosts", posts); 
+            return View("UserPosts", posts);
         }
+
+        [HttpPost]
+        [Authorize]
+        [ActionName("ToggleLike")]
+        public async Task<IActionResult> ToggleLikeAction([FromBody]ToggleLikeDto togglelike)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized(new { message = "User not logged in" });
+
+                var (liked, likeCount) = await _postLikeService.ToggleLikeAsync(togglelike.PostId, userId);
+                return Json(new { liked, likeCount });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+
     }
 }

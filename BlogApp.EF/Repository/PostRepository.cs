@@ -2,11 +2,6 @@
 using BlogApp.Core.IRepository;
 using BlogApp.Core.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BlogApp.EF.Repository
 {
@@ -32,7 +27,9 @@ namespace BlogApp.EF.Repository
         }
         public List<ShowPostsDTO> GetMyPosts(string id)
         {
-            var posts = _context.Posts.Where(p => p.UserId == id).Include(p => p.User)
+            var posts = _context.Posts
+                .Where(p => p.UserId == id)
+                .Include(p => p.User)
                 .Select(p=> new ShowPostsDTO
                 { 
                     Id = p.Id,
@@ -40,15 +37,14 @@ namespace BlogApp.EF.Repository
                     username=p.User.UserName,
                     CreatedAt=p.CreatedAt,
                     updateat=p.UpdatedAt,
-                    Content=p.content
-
+                    Content=p.content,
+                    IsLikedByCurrentUser = _context.PostLike.Any(l => l.PostId == p.Id && l.UserId == id)
                 })
                 .OrderByDescending(p => p.CreatedAt)
                 .ToList();
-            return posts;
+                return posts;
            
         }
-
         public void DeletePost(int id)
         {
             var post = _context.Posts.FirstOrDefault(p => p.Id == id);
@@ -83,8 +79,9 @@ namespace BlogApp.EF.Repository
             }
         }
       
-        public List<ShowPostsDTO> GetUserPosts(string username)
+        public List<ShowPostsDTO> GetUserPosts(string username,string currentUserId)
         {
+
             var posts = _context.Posts.Where(p => p.User.UserName == username).Include(p => p.User)
                 .Select(p => new ShowPostsDTO
                 {
@@ -93,7 +90,8 @@ namespace BlogApp.EF.Repository
                     username = p.User.UserName,
                     CreatedAt = p.CreatedAt,
                     updateat = p.UpdatedAt,
-                    Content = p.content
+                    Content = p.content,
+                    IsLikedByCurrentUser = _context.PostLike.Any(l => l.PostId == p.Id && l.UserId == currentUserId)
 
                 })
                 .OrderByDescending(p => p.CreatedAt)
