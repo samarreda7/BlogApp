@@ -31,6 +31,8 @@ namespace BlogApp.MVC
             builder.Services.AddScoped<IPostService, PostService>();
             builder.Services.AddScoped<IPostLikeRepository, PostLikeRepository>();
             builder.Services.AddScoped<IPostLikeService, PostLikeService>();
+            builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+            builder.Services.AddScoped<ICommentsService, CommentService>();
             builder.Services.AddHttpContextAccessor();
 
             var app = builder.Build();

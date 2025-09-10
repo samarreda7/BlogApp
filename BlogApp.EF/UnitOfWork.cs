@@ -17,6 +17,7 @@ namespace BlogApp.EF
         public IUserRepository userRepository {  get; private set; }
         public IPostRepository postRepository { get; private set; }
         public IPostLikeRepository postLikeRepository { get; private set; }
+        public ICommentRepository commentRepository { get; private set; }
 
         public UnitOfWork(AppDbContext context, UserManager<User> userManager, IConfiguration config, RoleManager<IdentityRole> roleManager) 
         {
@@ -25,6 +26,7 @@ namespace BlogApp.EF
             userRepository = new UserRepository(_context,userManager);
             postRepository = new PostRepository(_context);
             postLikeRepository = new PostLikeRepository(_context);
+            commentRepository = new CommentRepository(_context);
         }
     }
 }

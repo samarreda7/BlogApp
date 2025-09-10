@@ -4,6 +4,7 @@ using BlogApp.Core.DTOs;
 using BlogApp.Core.Models;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using BlogApp.Core.IRepository;
 
 
 namespace BlogApp.Service.Services
@@ -13,13 +14,17 @@ namespace BlogApp.Service.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IHttpContextAccessor _httpContextAccessor;
        private readonly IPostLikeService _postLikeService;
+        private readonly ICommentsService _commentsService;
         public PostService(IUnitOfWork unitOfWork, 
             IHttpContextAccessor httpContextAccessor,
-              IPostLikeService postLikeService)
+              IPostLikeService postLikeService,
+              ICommentsService commentsService
+              )
         {
             _unitOfWork = unitOfWork;
             _httpContextAccessor = httpContextAccessor;
             _postLikeService = postLikeService;
+            _commentsService = commentsService;
         }
 
         public async Task<(bool Success, string ErrorMessage)> CreatePostAsync(PostModelDTO model, string userId)
@@ -63,12 +68,14 @@ namespace BlogApp.Service.Services
            
             var likeCounts = await _postLikeService.GetLikeCountsForPostsAsync(postIds);
 
-            
+            var commentcounts = await _commentsService.GetCommentCountsForPostsAsync(postIds);
+
             var userLikeStatus = await _postLikeService.GetUserLikeStatusForPostsAsync(postIds, userId);
 
            
             foreach (var post in posts)
             {
+                post.CommentCount = commentcounts.GetValueOrDefault(post.Id, 0);
                 post.LikeCount = likeCounts.GetValueOrDefault(post.Id, 0);
                 post.IsLikedByCurrentUser = userLikeStatus.GetValueOrDefault(post.Id, false);
             }
@@ -135,7 +142,7 @@ namespace BlogApp.Service.Services
 
            
             var likeCounts = await _postLikeService.GetLikeCountsForPostsAsync(postIds);
-
+            var commentcounts = await _commentsService.GetCommentCountsForPostsAsync(postIds);
         
             if (_httpContextAccessor?.HttpContext?.User?.Identity?.IsAuthenticated == true)
             {
@@ -148,10 +155,11 @@ namespace BlogApp.Service.Services
             {
                 userLikeStatus = await _postLikeService.GetUserLikeStatusForPostsAsync(postIds, currentUserId);
             }
-
             
+
             foreach (var post in posts)
             {
+               post.CommentCount = commentcounts.GetValueOrDefault(post.Id, 0);
                 post.LikeCount = likeCounts.GetValueOrDefault(post.Id, 0);
                 post.IsLikedByCurrentUser = userLikeStatus.GetValueOrDefault(post.Id, false);
             }

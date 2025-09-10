@@ -1,4 +1,5 @@
 ﻿using BlogApp.Core.DTOs;
+using BlogApp.Core.IRepository;
 using BlogApp.Core.Iservices;
 using BlogApp.Core.Models;
 using BlogApp.Service.Services;
@@ -17,16 +18,19 @@ namespace BlogApp.MVC.Controllers
 
         IPostService _postService;
         IPostLikeService _postLikeService;
+        ICommentsService _commentsService;
         private readonly UserManager<User> _userManager;
         
         public PostController(IPostService postService,
             UserManager<User> userManager,
-            IPostLikeService postLikeService
+            IPostLikeService postLikeService,
+            ICommentsService commentsService
             )
         {
             _postService = postService;
             _userManager = userManager;
             _postLikeService = postLikeService;
+            _commentsService = commentsService;
         }
 
         [HttpGet]
@@ -165,7 +169,82 @@ namespace BlogApp.MVC.Controllers
                 return StatusCode(500, new { message = ex.Message });
             }
         }
+       
 
+        [HttpGet]
+        public async Task<IActionResult> GetComments(int postId)
+        {
+            if (postId <= 0)
+                return BadRequest(new { message = "Invalid post ID." });
 
+            try
+            {
+                var comments = await _commentsService.GetCommentsAsync(postId);
+                return Json(comments);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Failed to load comments: " + ex.Message });
+            }
+        }
+
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //[Authorize]
+        //public async Task<IActionResult> AddComment([FromBody] AddCommentRequestDto request)
+        //{
+        //    if (!ModelState.IsValid || string.IsNullOrWhiteSpace(request?.content))
+        //        return BadRequest(new { message = "Invalid comment content." });
+
+        //    var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        //    if (string.IsNullOrEmpty(userId))
+        //        return Unauthorized(new { message = "User not logged in." });
+
+        //    try
+        //    {
+        //        await _commentsService.AddCommentAsync(request.PostId, userId, request.content);
+        //        return Json(new
+        //        {
+        //            id = 0,
+        //            content = request.content,
+        //            firstName = User.FindFirst("FirstName")?.Value ?? "User", 
+        //            username = User.Identity?.Name,
+        //            timestamp = DateTime.UtcNow.ToString("MMM dd, yyyy 'at' h:mm tt")
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { message = "Failed to post comment: " + ex.Message });
+        //    }
+        //}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> AddComment([FromBody] AddCommentRequestDto request)
+        {
+            if (!ModelState.IsValid || string.IsNullOrWhiteSpace(request?.content))
+            {
+                return BadRequest(); // Or return a partial view with error
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            try
+            {
+                await _commentsService.AddCommentAsync(request.PostId, userId, request.content);
+
+                // Return success without data if using AJAX for UI update
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                // Log exception (if logging is configured)
+                return StatusCode(500, "Failed to post comment.");
+            }
+        }
     }
 }

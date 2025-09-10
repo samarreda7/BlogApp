@@ -5,6 +5,7 @@
 }
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="~/css/comments.css" />
 
 <div class="container mt-5">
     <div class="mb-4">
@@ -77,13 +78,42 @@
                                     <span class="ms-1">(@post.LikeCount)</span>
                                 }
                             </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                        <!--     comment section -->
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 toggle-comments"
+                                    data-post-id="@post.Id">
                                 <i class="bi bi-chat"></i> Comment
+                                @if (post.CommentCount > 0)
+                                {
+                                    <span class="ms-1">(@post.CommentCount)</span>
+                                }
                             </button>
                             <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
                                 <i class="bi bi-share"></i> Share
                             </button>
                         </div>
+
+
+
+                        <!-- Hidden Comments Section -->
+                        <div class="comments-section mt-3" id="comments-@post.Id" style="display:none;">
+                            <div class="comments-list mb-3 p-3 bg-light rounded">
+                                <div class="text-center text-muted py-2">Loading comments...</div>
+                            </div>
+
+                            <!-- Comment Input Form -->
+                            <div class="input-group">
+                                <input type="text"
+                                       class="form-control comment-input"
+                                       placeholder="Write a comment..."
+                                       data-post-id="@post.Id">
+                                <button class="btn btn-primary btn-sm post-comment" type="button">Post</button>
+                            </div>
+                        </div>
+
+
+
+
                     </div>
                 </div>
             }
@@ -99,51 +129,191 @@
                 return tokenField ? tokenField.value : '';
             }
 
-            // Attach click handler to all like buttons
+            // Escape HTML to prevent XSS
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Render comment in UI
+        function appendComment(container, comment) {
+           const authorName = comment.firstName || "User";
+            const avatarInitial = authorName.charAt(0).toUpperCase();
+            const avatarColor = comment.authorFirstName ? '#007bff' : '#6c757d';
+            const commentDiv = document.createElement('div');
+            commentDiv.className = 'comment d-flex mb-2 pb-2 border-bottom';
+            commentDiv.innerHTML = `
+                <div class="rounded-circle bg-secondary text-white text-center me-2 d-flex align-items-center justify-content-center"
+                     style="width: 30px; height: 30px; font-size: 0.8rem;">
+                    ${escapeHtml(avatarInitial)}
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2">
+                        <strong>${escapeHtml(authorName)}</strong>
+                        <small class="text-muted">${escapeHtml(comment.timestamp)}</small>
+                    </div>
+                    <div>${escapeHtml(comment.content)}</div>
+                </div>
+            `;
+            container.appendChild(commentDiv);
+        }
+
+            // Render all comments
+            function renderComments(container, comments) {
+                container.innerHTML = '';
+                if (comments.length === 0) {
+                    container.innerHTML = '<div class="text-center text-muted py-2">No comments yet. Be the first!</div>';
+                    return;
+                }
+                comments.forEach(comment => appendComment(container, comment));
+            }
+
+            // ========= LIKE BUTTON HANDLER =========
             document.querySelectorAll('.like-btn').forEach(button => {
-             button.addEventListener('click', async function () {
-            const postId = this.dataset.postId;
-            const icon = this.querySelector('i');
-            const countSpan = this.querySelector('span.ms-1'); // ← Updated selector
+                button.addEventListener('click', async function () {
+                    const postId = this.dataset.postId;
+                    const icon = this.querySelector('i');
+                    const countSpan = this.querySelector('span.ms-1');
 
-            try {
-                const response = await fetch('/Post/ToggleLike', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ postId: postId })
-                });
+                    try {
+                        const response = await fetch('/Post/ToggleLike', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ postId: postId })
+                        });
 
-                if (response.ok) {
-                    const result = await response.json();
+                        if (response.ok) {
+                            const result = await response.json();
 
-                    // Update button appearance
-                    if (result.liked) {
-                        icon.classList.replace('bi-heart', 'bi-heart-fill');
-                        this.classList.replace('btn-outline-primary', 'btn-primary');
-                    } else {
-                        icon.classList.replace('bi-heart-fill', 'bi-heart');
-                        this.classList.replace('btn-primary', 'btn-outline-primary');
-                    }
+                            // Update button appearance
+                            if (result.liked) {
+                                icon.classList.replace('bi-heart', 'bi-heart-fill');
+                                this.classList.replace('btn-outline-primary', 'btn-primary');
+                            } else {
+                                icon.classList.replace('bi-heart-fill', 'bi-heart');
+                                this.classList.replace('btn-primary', 'btn-outline-primary');
+                            }
 
-                    // Update like count — only show if > 0
-                    if (result.likeCount > 0) {
-                        if (countSpan) {
-                            countSpan.textContent = `(${result.likeCount})`;
+                            // Update like count
+                            if (result.likeCount > 0) {
+                                if (countSpan) {
+                                    countSpan.textContent = `(${result.likeCount})`;
+                                } else {
+                                    this.insertAdjacentHTML('beforeend', `<span class="ms-1">(${result.likeCount})</span>`);
+                                }
+                            } else {
+                                if (countSpan) countSpan.remove();
+                            }
                         } else {
-                            this.insertAdjacentHTML('beforeend', `<span class="ms-1">(${result.likeCount})</span>`);
+                            alert('Failed to toggle like. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('An unexpected error occurred.');
+                    }
+                });
+            });
+
+            // ========= COMMENT TOGGLE HANDLER =========
+            document.querySelectorAll('.toggle-comments').forEach(button => {
+                button.addEventListener('click', async function () {
+                    const postId = this.dataset.postId;
+                    const commentsSection = document.getElementById(`comments-${postId}`);
+                    const commentsList = commentsSection.querySelector('.comments-list');
+
+                    // Toggle visibility
+                    if (commentsSection.style.display === 'none') {
+                        commentsSection.style.display = 'block';
+
+                        // Load comments if not already loaded
+                        if (!commentsSection.dataset.loaded) {
+                            try {
+                                const response = await fetch(`/Post/GetComments?postId=${postId}`);
+                                if (response.ok) {
+                                    const comments = await response.json();
+                                    renderComments(commentsList, comments);
+                                    commentsSection.dataset.loaded = 'true';
+                                } else {
+                                    commentsList.innerHTML = '<div class="alert alert-danger">Failed to load comments.</div>';
+                                }
+                            } catch (error) {
+                                console.error('Error loading comments:', error);
+                                commentsList.innerHTML = '<div class="alert alert-danger">An error occurred.</div>';
+                            }
                         }
                     } else {
-                        if (countSpan) countSpan.remove();
+                        commentsSection.style.display = 'none';
                     }
 
-                } else {
-                    alert('Failed to toggle like. Please try again.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An unexpected error occurred.');
+                    // Focus input if expanded
+                    if (commentsSection.style.display === 'block') {
+                        const input = commentsSection.querySelector('.comment-input');
+                        input.focus();
+                    }
+                });
+            });
+
+            // ========= POST COMMENT HANDLER =========
+            document.addEventListener('click', async function (e) {
+                if (e.target.classList.contains('post-comment')) {
+                    const button = e.target;
+                    const input = button.previousElementSibling;
+                    const postId = input.dataset.postId;
+                    const content = input.value.trim();
+
+                    if (!content) return;
+
+                    const commentsList = document.querySelector(`#comments-${postId} .comments-list`);
+                    const commentCountSpan = document.querySelector(`.toggle-comments[data-post-id="${postId}"] .ms-1`);
+
+                    try {
+                        const response = await fetch('/Post/AddComment', {
+                             method: 'POST',
+                             headers: {
+                              'Content-Type': 'application/json',
+                              'RequestVerificationToken': getAntiForgeryToken()
+                                   },
+                                   body: JSON.stringify({ postId: postId, content: content })
+                                 });
+        if (response.ok) {
+            input.value = ''; // Clear input
+
+            // Create comment object locally since server doesn't return it
+            const newComment = {
+                firstName: '@User.FindFirst("FirstName")?.Value' || "User",
+                timestamp: new Date().toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }),
+                content: content
+            };
+
+            // Append new comment
+            appendComment(commentsList, newComment);
+
+            // Update comment count
+            let count = parseInt(commentCountSpan?.textContent?.replace(/[()]/g, '') || '0') || 0;
+            count++;
+            if (commentCountSpan) {
+                commentCountSpan.textContent = `(${count})`;
+            } else {
+                const btn = document.querySelector(`.toggle-comments[data-post-id="${postId}"]`);
+                btn.insertAdjacentHTML('beforeend', `<span class="ms-1">(${count})</span>`);
             }
-        });
+        }
+                        
+                        else {
+                            alert('Failed to post comment.');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('An unexpected error occurred.');
+                    }
+                }
             });
         });
     </script>

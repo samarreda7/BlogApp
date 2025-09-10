@@ -1,0 +1,14 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BlogApp.Core.DTOs
+{
+    public class AddCommentRequestDto
+    {
+        public string content { get; set; }
+        public int PostId { get; set; }
+    }
+}

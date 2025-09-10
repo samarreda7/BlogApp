@@ -12,5 +12,6 @@ namespace BlogApp.Core
         IUserRepository userRepository { get; }
         IPostRepository postRepository { get; }
         IPostLikeRepository postLikeRepository { get; }
+        ICommentRepository commentRepository { get; }
     }
 }
