@@ -179,7 +179,8 @@ namespace BlogApp.MVC.Controllers
 
             try
             {
-                var comments = await _commentsService.GetCommentsAsync(postId);
+                var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var comments = await _commentsService.GetCommentsAsync(postId, currentUserId);
                 return Json(comments);
             }
             catch (Exception ex)
@@ -188,35 +189,6 @@ namespace BlogApp.MVC.Controllers
             }
         }
 
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //[Authorize]
-        //public async Task<IActionResult> AddComment([FromBody] AddCommentRequestDto request)
-        //{
-        //    if (!ModelState.IsValid || string.IsNullOrWhiteSpace(request?.content))
-        //        return BadRequest(new { message = "Invalid comment content." });
-
-        //    var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        //    if (string.IsNullOrEmpty(userId))
-        //        return Unauthorized(new { message = "User not logged in." });
-
-        //    try
-        //    {
-        //        await _commentsService.AddCommentAsync(request.PostId, userId, request.content);
-        //        return Json(new
-        //        {
-        //            id = 0,
-        //            content = request.content,
-        //            firstName = User.FindFirst("FirstName")?.Value ?? "User", 
-        //            username = User.Identity?.Name,
-        //            timestamp = DateTime.UtcNow.ToString("MMM dd, yyyy 'at' h:mm tt")
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { message = "Failed to post comment: " + ex.Message });
-        //    }
-        //}
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
@@ -224,7 +196,7 @@ namespace BlogApp.MVC.Controllers
         {
             if (!ModelState.IsValid || string.IsNullOrWhiteSpace(request?.content))
             {
-                return BadRequest(); // Or return a partial view with error
+                return BadRequest(); 
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -237,14 +209,48 @@ namespace BlogApp.MVC.Controllers
             {
                 await _commentsService.AddCommentAsync(request.PostId, userId, request.content);
 
-                // Return success without data if using AJAX for UI update
                 return Ok();
             }
             catch (Exception ex)
             {
-                // Log exception (if logging is configured)
                 return StatusCode(500, "Failed to post comment.");
             }
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditComment([FromBody] UpdateCommentDTO dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var (success, message) = await _commentsService.EditComment(dto.Id, dto);
+
+            if (!success)
+            {
+                return BadRequest(new { message });
+            }
+
+            // Return updated comment data for UI refresh
+            var updatedComment = await _commentsService.GetComment(dto.Id); 
+
+            if (updatedComment == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(new
+            {
+                success = true,
+                comment = new
+                {
+                    id = updatedComment.Id,
+                    content = updatedComment.content,
+                    updatedAt = updatedComment.UpdatedAt.ToString("MMM dd, yyyy 'at' h:mm tt"),
+                    isEdited = (updatedComment.UpdatedAt - updatedComment.CreatedAt).TotalMinutes > 1
+                }
+            });
         }
     }
 }

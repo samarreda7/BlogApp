@@ -17,7 +17,8 @@ namespace BlogApp.Core.DTOs
         public string username { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-
+        public bool isAuthor { get; set; }
+        public bool isEdited { get; set; }
         public string timestamp => CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt");
 
     }
