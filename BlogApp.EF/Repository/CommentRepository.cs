@@ -21,22 +21,24 @@ namespace BlogApp.EF.Repository
         {
             _context = context;
         }
-        public async void AddComment(AddCommentDTO commentDto,string UserId , int postId)
+        public async Task<Comment> AddCommentAsync(AddCommentDTO commentDto, string userId, int postId)
         {
             var comment = new Comment
             {
                 PostId = postId,
-                UserId = UserId,
+                UserId = userId,
                 content = commentDto.content,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
             };
 
             _context.Comments.Add(comment);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();   // <-- await here
 
-
+            return comment;
         }
+
+
         public List<ShowCommentDTO> ShowCommentsOfPost(int postId,string currentUserId) 
         {
             var comments = _context.Comments
@@ -90,6 +92,18 @@ namespace BlogApp.EF.Repository
                 return false;
             }
         }
+        public async Task<bool> DeleteComment(int id)
+        {
+            var comment = await _context.Comments.FirstOrDefaultAsync(p => p.Id == id);
+
+            if (comment == null)
+                return false;
+
+            _context.Comments.Remove(comment);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
 
     }
 }

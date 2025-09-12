@@ -10,10 +10,11 @@ namespace BlogApp.Core.IRepository
 {
     public interface ICommentsService
     {
-        Task AddCommentAsync(int postId, string userId, string content);
+        Task<Comment> AddCommentAsync(int postId, string userId, string content);
         Task<List<ShowCommentDTO>> GetCommentsAsync(int postId, string currentUserId);
         Task<Dictionary<int, int>> GetCommentCountsForPostsAsync(List<int> postIds);
         Task<Comment> GetComment(int id);
         Task<(bool Success, string ErrorMessage)> EditComment(int id, UpdateCommentDTO dto);
+        Task<(bool Success, string ErrorMessage)> DeleteComment(int Id);
     }
 }

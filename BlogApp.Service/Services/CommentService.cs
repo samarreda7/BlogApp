@@ -19,7 +19,7 @@ namespace BlogApp.Service.Services
         {
             _unitOfWork = unitOfWork;
         }
-        public async Task AddCommentAsync(int postId, string userId, string content)
+        public async Task<Comment> AddCommentAsync(int postId, string userId, string content)
         {
             if (string.IsNullOrWhiteSpace(content))
                 throw new ArgumentException("Comment content cannot be empty.", nameof(content));
@@ -32,9 +32,10 @@ namespace BlogApp.Service.Services
                 UpdatedAt = DateTime.UtcNow
             };
 
-             _unitOfWork.commentRepository.AddComment(commentDto, userId, postId);
-
+            var comment = await _unitOfWork.commentRepository.AddCommentAsync(commentDto, userId, postId);
+            return comment;
         }
+
 
         public async Task<List<ShowCommentDTO>> GetCommentsAsync(int postId,string currentUserId)
         {
@@ -81,6 +82,23 @@ namespace BlogApp.Service.Services
             return (true, "Comment updated successfully.");
 
         }
+
+        public async Task<(bool Success, string ErrorMessage)> DeleteComment(int id)
+        {
+            if (id <= 0)
+                return (false, "Invalid comment ID.");
+
+            try
+            {
+                _unitOfWork.commentRepository.DeleteComment(id);
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                return (false, "An error occurred while deleting the comment. Please try again.");
+            }
+        }
+
 
     }
 }

@@ -195,27 +195,36 @@ namespace BlogApp.MVC.Controllers
         public async Task<IActionResult> AddComment([FromBody] AddCommentRequestDto request)
         {
             if (!ModelState.IsValid || string.IsNullOrWhiteSpace(request?.content))
-            {
-                return BadRequest(); 
-            }
+                return BadRequest();
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
-            {
                 return Unauthorized();
-            }
 
             try
             {
-                await _commentsService.AddCommentAsync(request.PostId, userId, request.content);
+                var comment = await _commentsService.AddCommentAsync(request.PostId, userId, request.content);
 
-                return Ok();
+                var dto = new CommentResponseDto
+                {
+                    Id = comment.Id,
+                    Content = comment.content,
+                    FirstName = comment.User?.FirstName ?? "User",
+                    CreatedAt = comment.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt"),
+                    UpdatedAt = comment.UpdatedAt.ToString("MMM dd, yyyy 'at' h:mm tt"),
+                    IsEdited = (comment.UpdatedAt - comment.CreatedAt).TotalMinutes > 1,
+                    IsAuthor = true
+                };
+
+                return Ok(dto);
             }
-            catch (Exception ex)
+            catch
             {
                 return StatusCode(500, "Failed to post comment.");
             }
         }
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditComment([FromBody] UpdateCommentDTO dto)
@@ -251,6 +260,29 @@ namespace BlogApp.MVC.Controllers
                     isEdited = (updatedComment.UpdatedAt - updatedComment.CreatedAt).TotalMinutes > 1
                 }
             });
+        }
+
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteComment([FromForm] int id)
+
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new { success = false, message = "Invalid comment ID." });
+            }
+
+            try
+            {
+                await _commentsService.DeleteComment(id);
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Failed to delete comment." });
+            }
         }
     }
 }
