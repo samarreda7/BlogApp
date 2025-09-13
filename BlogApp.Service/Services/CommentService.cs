@@ -35,12 +35,10 @@ namespace BlogApp.Service.Services
             var comment = await _unitOfWork.commentRepository.AddCommentAsync(commentDto, userId, postId);
             return comment;
         }
-
-
-        public async Task<List<ShowCommentDTO>> GetCommentsAsync(int postId,string currentUserId)
+        public List<ShowCommentDTO> GetComments(int postId,string currentUserId)
         {
             
-         return await Task.Run(() => _unitOfWork.commentRepository.ShowCommentsOfPost(postId,currentUserId));
+         return  _unitOfWork.commentRepository.ShowCommentsOfPost(postId,currentUserId);
         }
         public async Task<Dictionary<int, int>> GetCommentCountsForPostsAsync(List<int> postIds)
         {
@@ -49,7 +47,6 @@ namespace BlogApp.Service.Services
         public async Task<Comment> GetComment(int id)
         {
             return await _unitOfWork.commentRepository.GetComment(id);
-
         }
 
         public async Task<(bool Success, string ErrorMessage)> EditComment(int id, UpdateCommentDTO dto)
@@ -57,7 +54,7 @@ namespace BlogApp.Service.Services
             if (dto == null)
                 return (false, "Update data cannot be null.");
 
-            var comment = await _unitOfWork.commentRepository.GetComment(id);
+            var comment = await GetComment(id);
 
             if (comment == null)
                 return (false, "Comment not found.");
@@ -80,8 +77,28 @@ namespace BlogApp.Service.Services
                 return (false, "Failed to save changes to the database.");
 
             return (true, "Comment updated successfully.");
-
         }
+        public async Task<CommentResponseDto> GetCommentResponseAsync(int commentid, string currentUserId)
+        {
+            var comment = await GetComment(commentid);
+
+            if (comment == null)
+                return null;
+
+            return new CommentResponseDto
+            {
+                Id = comment.Id,
+                Content = comment.content,
+                FirstName = comment.User?.FirstName,
+                CreatedAt = comment.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt"),
+                UpdatedAt = comment.UpdatedAt.ToString("MMM dd, yyyy 'at' h:mm tt"),
+                IsEdited = (comment.UpdatedAt - comment.CreatedAt).TotalMinutes > 1,
+                IsAuthor = comment.UserId == currentUserId
+            };
+        }
+
+
+
 
         public async Task<(bool Success, string ErrorMessage)> DeleteComment(int id)
         {
@@ -90,7 +107,7 @@ namespace BlogApp.Service.Services
 
             try
             {
-                _unitOfWork.commentRepository.DeleteComment(id);
+               _unitOfWork.commentRepository.DeleteComment(id);
                 return (true, null);
             }
             catch (Exception ex)

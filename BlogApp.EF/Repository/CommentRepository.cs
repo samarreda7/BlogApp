@@ -33,7 +33,7 @@ namespace BlogApp.EF.Repository
             };
 
             _context.Comments.Add(comment);
-            await _context.SaveChangesAsync();   // <-- await here
+            await _context.SaveChangesAsync();   
 
             return comment;
         }
@@ -47,7 +47,6 @@ namespace BlogApp.EF.Repository
         .ToList();               
 
                 return comments.Select(c => {
-                var isEdited = (c.UpdatedAt - c.CreatedAt).TotalMinutes > 1;
                     return new ShowCommentDTO
                     {
                         Id = c.Id,
@@ -58,15 +57,15 @@ namespace BlogApp.EF.Repository
                         FirstName = c.User.FirstName,
                         username = c.User.UserName,
                         isAuthor = c.UserId == currentUserId,
-                        isEdited = isEdited,
+                        isEdited = (c.UpdatedAt - c.CreatedAt).TotalMinutes > 1,
                     };
             }).ToList();
 
 
         }
-        public async Task<Dictionary<int, int>> GetCommentCountsForPostsAsync(List<int> postIds)
+        public  Task<Dictionary<int, int>> GetCommentCountsForPostsAsync(List<int> postIds)
         {
-            return await _context.Comments
+            return  _context.Comments
                 .Where(pl => postIds.Contains(pl.PostId))
                 .GroupBy(pl => pl.PostId)
                 .ToDictionaryAsync(g => g.Key, g => g.Count());
@@ -74,7 +73,9 @@ namespace BlogApp.EF.Repository
 
         public async Task<Comment> GetComment(int id)
         {
-            return await _context.Comments.FirstOrDefaultAsync(p => p.Id == id);
+            return await _context.Comments
+         .Include(c => c.User) 
+         .FirstOrDefaultAsync(c => c.Id == id);
 
         }
         public async Task<bool> UpdateComment(Comment comment)
@@ -83,22 +84,22 @@ namespace BlogApp.EF.Repository
             try
             {
                 _context.Comments.Update(comment);
-                return await _context.SaveChangesAsync() > 0;
+                int affectedRows = await _context.SaveChangesAsync();
+                return affectedRows > 0 ;
 
             }
             catch
             {
-
                 return false;
             }
         }
         public async Task<bool> DeleteComment(int id)
         {
             var comment = await _context.Comments.FirstOrDefaultAsync(p => p.Id == id);
-
             if (comment == null)
+            {
                 return false;
-
+            }
             _context.Comments.Remove(comment);
             await _context.SaveChangesAsync();
             return true;

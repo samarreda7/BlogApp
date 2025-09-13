@@ -33,12 +33,14 @@ namespace BlogApp.MVC.Controllers
             _commentsService = commentsService;
         }
 
+
         [HttpGet]
         [Authorize]
         public IActionResult Create()
         {
             return View();
         }
+
 
         [HttpPost]
         [Authorize]
@@ -66,6 +68,7 @@ namespace BlogApp.MVC.Controllers
             return RedirectToAction("MyPosts", "Post");
         }
 
+
         [Authorize]
         public async Task<IActionResult> MyPosts()
         {
@@ -75,7 +78,6 @@ namespace BlogApp.MVC.Controllers
             var posts = await _postService.GetMyPostsAsync(userId);
             return View(posts);
         }
-
 
 
         [Authorize]
@@ -105,6 +107,7 @@ namespace BlogApp.MVC.Controllers
             return View(model); 
         }
 
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(UpdatePostDTO model)
@@ -125,10 +128,8 @@ namespace BlogApp.MVC.Controllers
         }
 
 
-
         [HttpGet]
         [Route("Post/Profile/{username}")]
-        [AllowAnonymous]
         public async Task<IActionResult> UserProfile(string username)
         {
             if (string.IsNullOrWhiteSpace(username))
@@ -136,7 +137,7 @@ namespace BlogApp.MVC.Controllers
             var userId = _userManager.GetUserId(User);
             var posts = await _postService.GetPostsByUserIdAsync(username,userId);
 
-            if (!posts.Any())
+            if (!posts.Any()) // posts.count() > 0
             {
                 ViewBag.FirstName = "User";
                 ViewBag.username = username;
@@ -149,6 +150,7 @@ namespace BlogApp.MVC.Controllers
 
             return View("UserPosts", posts);
         }
+
 
         [HttpPost]
         [Authorize]
@@ -180,7 +182,7 @@ namespace BlogApp.MVC.Controllers
             try
             {
                 var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var comments = await _commentsService.GetCommentsAsync(postId, currentUserId);
+                var comments = _commentsService.GetComments(postId, currentUserId);
                 return Json(comments);
             }
             catch (Exception ex)
@@ -188,6 +190,7 @@ namespace BlogApp.MVC.Controllers
                 return StatusCode(500, new { message = "Failed to load comments: " + ex.Message });
             }
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -204,19 +207,8 @@ namespace BlogApp.MVC.Controllers
             try
             {
                 var comment = await _commentsService.AddCommentAsync(request.PostId, userId, request.content);
-
-                var dto = new CommentResponseDto
-                {
-                    Id = comment.Id,
-                    Content = comment.content,
-                    FirstName = comment.User?.FirstName ?? "User",
-                    CreatedAt = comment.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt"),
-                    UpdatedAt = comment.UpdatedAt.ToString("MMM dd, yyyy 'at' h:mm tt"),
-                    IsEdited = (comment.UpdatedAt - comment.CreatedAt).TotalMinutes > 1,
-                    IsAuthor = true
-                };
-
-                return Ok(dto);
+                var newComment =await _commentsService.GetCommentResponseAsync(comment.Id, User.FindFirstValue(ClaimTypes.NameIdentifier));
+                return Ok(newComment);
             }
             catch
             {
@@ -241,25 +233,14 @@ namespace BlogApp.MVC.Controllers
                 return BadRequest(new { message });
             }
 
-            // Return updated comment data for UI refresh
-            var updatedComment = await _commentsService.GetComment(dto.Id); 
 
-            if (updatedComment == null)
-            {
+            var updatedCommentDto = await _commentsService.GetCommentResponseAsync(dto.Id, User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            if (updatedCommentDto == null)
                 return NotFound();
-            }
 
-            return Ok(new
-            {
-                success = true,
-                comment = new
-                {
-                    id = updatedComment.Id,
-                    content = updatedComment.content,
-                    updatedAt = updatedComment.UpdatedAt.ToString("MMM dd, yyyy 'at' h:mm tt"),
-                    isEdited = (updatedComment.UpdatedAt - updatedComment.CreatedAt).TotalMinutes > 1
-                }
-            });
+            return Ok(new { success = true, comment = updatedCommentDto });
+
         }
 
 
@@ -267,21 +248,23 @@ namespace BlogApp.MVC.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteComment([FromForm] int id)
-
         {
             if (id <= 0)
             {
                 return BadRequest(new { success = false, message = "Invalid comment ID." });
             }
-
             try
             {
-                await _commentsService.DeleteComment(id);
+                var result = await _commentsService.DeleteComment(id);
+
+                if (!result.Success)
+                    return BadRequest(new { success = false, message = result.ErrorMessage });
+
                 return Ok(new { success = true });
             }
-            catch (Exception ex)
+            catch (Exception ex) 
             {
-                return StatusCode(500, new { success = false, message = "Failed to delete comment." });
+                return StatusCode(500, new { success = false, message = "Unexpected error occurred." });
             }
         }
     }
